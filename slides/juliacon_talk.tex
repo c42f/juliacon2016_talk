@@ -67,8 +67,10 @@
 %\usecolortheme[rgb={0.7,0.4,0.1}]{structure}
 %\usecolortheme[hsb={0.6,0.4,0.55}]{structure}
 %\usecolortheme[hsb={0.6,0.4,0.45}]{structure}
-\definecolor{DisplazBrown}{RGB}{60,50,50}
-\setbeamercolor{background canvas}{bg=DisplazBrown}
+
+%\definecolor{DisplazBrown}{RGB}{60,50,50}
+%\setbeamercolor{background canvas}{bg=DisplazBrown}
+%\setbeamercolor*{frametitle}{bg=DisplazBrown}
 
 \usefonttheme[onlymath]{serif}
 %\usefonttheme[stillsansseriftext,stillsansserifsmall]{serif}
@@ -78,7 +80,7 @@
 \setbeamertemplate{navigation symbols}{}
 
 \title[3D mapping with Geodesy]{Accurate 3D mapping with Geodesy and Proj4}
-\subtitle{Point cloud SLAM via large scale least squares}
+\subtitle{Point cloud SLAM and large scale least squares}
 
 \titlegraphic{\includegraphics[viewport=8 653 558 831,width=6cm]{roames_logo.pdf}}
 
@@ -96,32 +98,72 @@
   \titlepage
 \end{frame}
 
-%\begin{frame}
-%  \frametitle{Overview}
-%  \tableofcontents
-%\end{frame}
+%===============================================================================
+\section{Background}
+
+\begin{frame}
+  \frametitle{Roames}
+  Observation, modelling and simulation
+  \begin{itemize}
+    \item
+      Remote data capture
+    \item
+      Raw data processing
+    \item
+      Feature detection
+    \item
+      Physical modelling
+    \item
+      Reporting and visualization
+  \end{itemize}
+  \vf{1filll}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Roames}
+  Raw data
+  \begin{itemize}
+    \item
+      Signal processing
+    \item
+      Georeferencing (*)
+    \item
+      Storage and indexing
+  \end{itemize}
+  \vf{1filll}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Roames}
+  Feature detection
+  \begin{itemize}
+    \item
+      Statistical inference
+    \item
+      Machine learning
+    \item
+      Robust fitting
+    \item
+      Human QA
+  \end{itemize}
+  Modelling
+  \begin{itemize}
+    \item
+      Physical
+    \item
+      Risk
+  \end{itemize}
+  \vf{1filll}
+\end{frame}
 
 
 %===============================================================================
 \section{The problem}
 
 \begin{frame}
-  \frametitle{Roames}
-  Demo of a swath survey
-  \begin{itemize}
-    \item
-      Flight path + laser pulses for a scanline
-    \item
-      Power lines + trees
-    \item
-      Models of power lines and poles
-  \end{itemize}
-\end{frame}
-
-
-
-\begin{frame}
-  \frametitle{The problem}
+  \frametitle{Georeferencing challenges}
   Mismatched survey data gives us trouble when we care about
   \begin{itemize}
     \item
@@ -136,50 +178,64 @@
 
 
 \begin{frame}
-  \frametitle{Surveying - background}
-  \begin{itemize}
-    \item
-      Coordinate reference systems (CRSs)
-      \begin{itemize}
-        \item Coordinate system (typical types: cartesian, geographic, "projected")
-        \item Datum - identifies the measurement procedure: originally the survey peg, then a triangulation network, now a satellite constellation
-      \end{itemize}
-    \item
-      Tie points
-      \begin{itemize}
-        \item Points in two CRS which should be the same
-        \item Generate automatically, should be robust to general geometry
-      \end{itemize}
-    \item
-  \end{itemize}
-  \vf{1filll}
-\end{frame}
-
-
-\begin{frame}
   \frametitle{Point cloud matching}
   Standard algorithm - iterative closest point
-
-  \onslide+<1>
+  \begin{itemize}
+    \item Match A against B
+  \end{itemize}
+  \only<1>{
   \[
     \argmin_T \sum_{\v{p}\in A} \norm[\big]{ T(\v{p}) - \mu_B(T(\v{p}))}_2
   \]
-\onslide+<2>
-\[
-J(T, f) = \frac{1}{f^\lambda} \sum_{\v{p} \in I(A,f,T,B)}
-            \Big(
-              N(T(\v{p})) \cdot \left[T(\v{p}) - \mu_B(T(\v{p})\right]
-            \Big)^2
-\]
-
-  Interactive demo
-
-  \begin{itemize}
-    \item  Simple and effective for good initial guesses
-  \end{itemize}
+  }\only<2>{
+  \[
+  \argmin_{T,f} = \frac{1}{f^\lambda} \sum_{\v{p} \in I(A,f,T,B)}
+              \Big(
+                N(T(\v{p})) \cdot \left[T(\v{p}) - \mu_B(T(\v{p}))\right]
+              \Big)^2
+  \]
+  }
   (demo)
   \vf{1filll}
 \end{frame}
+
+\begin{frame}
+  \frametitle{Matching results}
+  \includegraphics[width=11cm]{Rockhampton_dx.pdf}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Adjusting trajectories}
+  \begin{itemize}
+    \item
+      Solve for an error spline
+    \item
+      Each match defines a "tie point" between two scanner coordinate systems
+    \item
+      Least squares to adjust error spline until coordinate systems are consistent
+  \end{itemize}
+\end{frame}
+
+
+%\begin{frame}
+%  \frametitle{Surveying - background}
+%  \begin{itemize}
+%    \item
+%      Coordinate reference systems (CRSs)
+%      \begin{itemize}
+%        \item Coordinate system (typical types: cartesian, geographic, "projected")
+%        \item Datum - identifies the measurement procedure: originally the survey peg, then a triangulation network, now a satellite constellation
+%      \end{itemize}
+%    \item
+%      Tie points
+%      \begin{itemize}
+%        \item Points in two CRS which should be the same
+%        \item Generate automatically, should be robust to general geometry
+%      \end{itemize}
+%    \item
+%  \end{itemize}
+%  \vf{1filll}
+%\end{frame}
 
 
 
@@ -187,42 +243,14 @@ J(T, f) = \frac{1}{f^\lambda} \sum_{\v{p} \in I(A,f,T,B)}
 \section{Packages}
 
 \begin{frame}
-  \frametitle{Geodesy}
+  \frametitle{Packages}
+  \begin{itemize}
+    \item
+      CoordinateTransformations
+    \item
+      Geodesy
+  \end{itemize}
 \end{frame}
-
-
-
-
-
-%===============================================================================
-\section*{End}
-
-
-\begin{frame}
-  \frametitle{References}
-  %\nocite{*}
-  %\bibliographystyle{unsrt}
-  %\fontsize{7pt}{7pt}
-  %\bibliography{bibliography}
-  \normalsize
-\end{frame}
-
-
-
-%===============================================================================
-%===============================================================================
-%\part{Extras}
-%
-%\begin{frame}
-%  \frametitle{GLSL HDRI}
-%  \lstset{language=C,basicstyle=\tiny}
-%  \lstinputlisting[linerange=2-16]{../hdri.glsl}
-%\end{frame}
-
-
-%\begin{frame}
-%  \frametitle{Collage Theorem}
-%\end{frame}
 
 
 \end{document}
