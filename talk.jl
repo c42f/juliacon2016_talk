@@ -25,27 +25,46 @@ N = 10000
 #c2 = PointCloud([foo(randn(V3d)) .+ Vec(0,0,5) for _=1:N])
 R1 = 10.0
 R2 = 2.0
-c1 = PointCloud(V3d[toroid(R1, R2, 2π*rand(),2π*rand()) for _=1:N])
-c2 = PointCloud(V3d[toroid(R1, R2, 2π*rand(),2π*rand())+V3d(1,0,0) for _=1:N])
+c1 = PointCloud(V3d[0.1*rand(V3d)+toroid(R1, R2, 2π*rand(),2π*rand()) for _=1:N])
+c2 = PointCloud(V3d[0.1*rand(V3d)+toroid(R1, R2, π*rand(),π*rand())+V3d(1,1,1) for _=1:N÷4])
+# Diverges!
+# c2 = PointCloud(V3d[0.1*rand(V3d)+toroid(R1, R2, π*rand(),π*rand())+V3d(1,10,10) for _=1:N÷4])
 add_normals!(c1)
 add_normals!(c2)
 
 clearplot()
 
-function icpdebug(c1, c2, T, ref_inds, inlier_inds)
+function icpdebug(c1, c2, iteration, T, ref_inds, inlier_inds)
     println(T)
-    p1 = positions(c1)
-    p2 = copy(positions(c2))
-    @fslice p2[:,:] .+= T
-    matches = similar(p1, 2*length(inlier_inds))
-    matches[1:2:end] = p1[inlier_inds]
-    matches[2:2:end] = p2[ref_inds[inlier_inds]]
+    p1 = copy(positions(c1))
+    @fslice p1[:,:] .-= T
+    p2 = positions(c2)
+    n2 = normals(c2)
+    # Plot clouds
     plot3d!(p1, label="Cloud1", color=[0.5,0.5,1], markershape='x')
+    #plot3d!(p1[inlier_inds], label="Cloud1", color=[0.5,0.5,1], markershape='x')
     plot3d!(p2, label="Cloud2", color=[1,0.5,0.5], markershape='+')
+    # Plot matching line segments
+    matches = similar(p1, 2*length(inlier_inds))
+    for i=1:2:length(matches)
+        i1 = inlier_inds[div(i+1,2)]
+        i2 = ref_inds[i1]
+        matches[i] = p1[i1]
+        v = p2[i2] - p1[i1]
+        matches[i+1] = matches[i] + n2[i2]*dot(n2[i2],v)
+    end
     plot3d!(matches, label="Matches", markershape='-', linebreak=2)
     wait(KeyEvent("Space"))
 end
 
+register(c1, c2,
+    dist_type = :surface,
+    iterfunc = (i,T,inds,inlier_inds)->
+                icpdebug(c1,c2,i,T,inds,inlier_inds)
+)
+
+
+#=
 Displaz.event_loop(
         KeyEvent("c")=>Void,
         KeyEvent("q")=>Void,
@@ -58,10 +77,8 @@ Displaz.event_loop(
     elseif event == KeyEvent("c")
         clearplot()
     elseif event == KeyEvent("u")
-        println("ICP")
-        register(c1, c2,
-                 iterfunc=(T,inds,inlier_inds)->icpdebug(c1,c2,T,inds,inlier_inds))
-        println("Done")
+        register(c1, c2, lambda=2.5,
+                 iterfunc=(i,T,inds,inlier_inds)->icpdebug(c1,c2,i,T,inds,inlier_inds))
         #=
         arg::CursorPosition
         p1 = positions(c1)
@@ -78,3 +95,4 @@ Displaz.event_loop(
         =#
     end
 end
+=#
