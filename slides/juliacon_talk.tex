@@ -1,0 +1,226 @@
+\documentclass{beamer}
+
+%\usetheme{Boadilla}
+
+\usepackage{graphics}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{listings}
+
+%--------------------------------------------------
+% Macros
+
+\newcommand{\vf}[1]{\vskip0pt plus #1}
+
+\renewcommand{\v}[1]{\mathbf{#1}} % Vector
+\newcommand{\Abs}[1]{\left\lvert #1 \right\rvert}
+\newcommand{\Norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\norm}[2][]{#1\lVert #2 #1\rVert}
+\newcommand{\Bkt}[1]{\left( #1 \right)}
+\newcommand{\Bktsq}[1]{\left[ #1 \right]}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+\newcommand{\trans}[2]{T_{#1\leftarrow#2}}
+
+%--------------------------------------------------
+% Beamer stuff
+\usefonttheme{structurebold}
+\useinnertheme{default}
+\useoutertheme{smoothbars}
+
+% hacked albatross color theme
+\setbeamercolor*{normal text}{fg=yellow!20!white,bg=blue!0!black}
+
+\setbeamercolor*{example text}{fg=green!65!black}
+
+\setbeamercolor*{structure}{fg=blue!25!white}
+
+\setbeamercolor{palette primary}{use={structure,normal text},fg=structure.fg,bg=normal text.bg!75!black}
+\setbeamercolor{palette secondary}{use={structure,normal text},fg=structure.fg,bg=normal text.bg!60!black}
+\setbeamercolor{palette tertiary}{use={structure,normal text},fg=structure.fg,bg=normal text.bg!45!black}
+\setbeamercolor{palette quaternary}{use={structure,normal text},fg=structure.fg,bg=normal text.bg!30!black}
+
+\setbeamercolor*{block body}{bg=normal text.bg!90!black}
+\setbeamercolor*{block body alerted}{bg=normal text.bg!90!black}
+\setbeamercolor*{block body example}{bg=normal text.bg!90!black}
+\setbeamercolor*{block title}{parent=structure,bg=normal text.bg!75!black}
+\setbeamercolor*{block title alerted}{use={normal text,alerted text},fg=alerted text.fg!75!normal text.fg,bg=normal text.bg!75!black}
+\setbeamercolor*{block title example}{use={normal text,example text},fg=example text.fg!75!normal text.fg,bg=normal text.bg!75!black}
+
+\setbeamercolor{item projected}{fg=black}
+
+\setbeamercolor*{sidebar}{parent=palette primary}
+
+\setbeamercolor{palette sidebar primary}{use=normal text,fg=normal text.fg}
+\setbeamercolor{palette sidebar secondary}{use=structure,fg=structure.fg}
+\setbeamercolor{palette sidebar tertiary}{use=normal text,fg=normal text.fg}
+\setbeamercolor{palette sidebar quaternary}{use=structure,fg=structure.fg}
+
+\setbeamercolor*{separation line}{}
+\setbeamercolor*{fine separation line}{}
+
+
+
+%\usecolortheme{orchid} % inner color theme
+%\usecolortheme{seahorse} % outer color theme
+%\usecolortheme{albatross}
+%\usecolortheme[rgb={0.7,0.4,0.1}]{structure}
+%\usecolortheme[hsb={0.6,0.4,0.55}]{structure}
+%\usecolortheme[hsb={0.6,0.4,0.45}]{structure}
+%\setbeamercolor{background canvas}{bg=}
+
+\usefonttheme[onlymath]{serif}
+%\usefonttheme[stillsansseriftext,stillsansserifsmall]{serif}
+
+\setbeamercovered{transparent}
+
+\setbeamertemplate{navigation symbols}{}
+
+\title[3D mapping with Geodesy]{Accurate 3D mapping with Geodesy and Proj4}
+\subtitle{Point cloud SLAM via large scale least squares}
+%\titlegraphic{\includegraphics[viewport=8 653 558 831,width=6cm]{figures/logos.pdf}}
+
+
+\author{Chris Foster}
+\institute{Fugro Roames}
+\date{2016-06-19}
+
+
+%===============================================================================
+%===============================================================================
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+
+%\begin{frame}
+%  \frametitle{Overview}
+%  \tableofcontents
+%\end{frame}
+
+
+%===============================================================================
+\section{The problem}
+
+\begin{frame}
+  \frametitle{Roames}
+  Demo of a swath survey
+  \begin{itemize}
+    \item
+      Flight path + laser pulses for a scanline
+    \item
+      Power lines + trees
+    \item
+      Models of power lines and poles
+  \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{The problem}
+  Mismatched survey data gives us trouble when we care about
+  \begin{itemize}
+    \item
+      Change detection
+    \item
+      Feature fitting
+    \item
+      Object classification
+  \end{itemize}
+  \vf{1filll}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Surveying - background}
+  \begin{itemize}
+    \item
+      Coordinate reference systems (CRSs)
+      \begin{itemize}
+        \item Coordinate system (typical types: cartesian, geographic, "projected")
+        \item Datum - identifies the measurement procedure: originally the survey peg, then a triangulation network, now a satellite constellation
+      \end{itemize}
+    \item
+      Tie points
+      \begin{itemize}
+        \item Points in two CRS which should be the same
+        \item Generate automatically, should be robust to general geometry
+      \end{itemize}
+    \item
+  \end{itemize}
+  \vf{1filll}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Point cloud matching}
+  Standard algorithm - iterative closest point
+
+  \onslide+<1>
+  \[
+    \argmin_T \sum_{\v{p}\in A} \norm[\big]{ T(\v{p}) - \mu_B(T(\v{p}))}_2
+  \]
+\onslide+<2>
+\[
+J(T, f) = \frac{1}{f^\lambda} \sum_{\v{p} \in I(A,f,T,B)}
+            \Big(
+              N(T(\v{p})) \cdot \left[T(\v{p}) - \mu_B(T(\v{p})\right]
+            \Big)^2
+\]
+
+  Interactive demo
+
+  \begin{itemize}
+    \item  Simple and effective for good initial guesses
+  \end{itemize}
+  (demo)
+  \vf{1filll}
+\end{frame}
+
+
+
+%===============================================================================
+\section{Packages}
+
+\begin{frame}
+  \frametitle{Geodesy}
+\end{frame}
+
+
+
+
+
+%===============================================================================
+\section*{End}
+
+
+\begin{frame}
+  \frametitle{References}
+  %\nocite{*}
+  %\bibliographystyle{unsrt}
+  %\fontsize{7pt}{7pt}
+  %\bibliography{bibliography}
+  \normalsize
+\end{frame}
+
+
+
+%===============================================================================
+%===============================================================================
+%\part{Extras}
+%
+%\begin{frame}
+%  \frametitle{GLSL HDRI}
+%  \lstset{language=C,basicstyle=\tiny}
+%  \lstinputlisting[linerange=2-16]{../hdri.glsl}
+%\end{frame}
+
+
+%\begin{frame}
+%  \frametitle{Collage Theorem}
+%\end{frame}
+
+
+\end{document}
